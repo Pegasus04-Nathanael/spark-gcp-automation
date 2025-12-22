@@ -105,13 +105,14 @@ resource "google_compute_instance" "spark_master" {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.10"
     
-    access_config {
-      # IP publique éphémère
-    }
+    access_config {}
   }
 
   metadata = {
-    ssh-keys = "spark:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys = join("\n", [
+      "spark:${file("~/.ssh/id_rsa.pub")}", 
+      "spark:${file("${path.module}/spark-gcp-automation/my_key.pub")}"
+    ])
   }
 
   metadata_startup_script = <<-EOF
@@ -146,7 +147,10 @@ resource "google_compute_instance" "spark_workers" {
   }
 
   metadata = {
-    ssh-keys = "spark:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys = join("\n", [
+      "spark:${file("~/.ssh/id_rsa.pub")}", 
+      "spark:${file("${path.module}/spark-gcp-automation/my_key.pub")}"
+    ])
   }
 
   metadata_startup_script = <<-EOF
@@ -180,7 +184,10 @@ resource "google_compute_instance" "spark_edge" {
   }
 
   metadata = {
-    ssh-keys = "spark:${file("~/.ssh/id_rsa.pub")}"
+    ssh-keys = join("\n", [
+      "spark:${file("~/.ssh/id_rsa.pub")}", 
+      "spark:${file("${path.module}/spark-gcp-automation/my_key.pub")}"
+    ])
   }
 
   metadata_startup_script = <<-EOF
