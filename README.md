@@ -40,7 +40,7 @@ WordCount application pour validation du cluster.
 ## 👥 Auteurs
 
 - Nathanael FETUE
-- Romero TCHIZE
+- Romero TCHIAZE
 
 ## 📅 Projet
 
