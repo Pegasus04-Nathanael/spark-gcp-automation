@@ -1,0 +1,19 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+
+# Credentials
+*.pem
+*.key
+credentials.json
+
+# Python
+__pycache__/
+*.pyc
+
+auto_push.sh
