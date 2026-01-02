@@ -1,0 +1,45 @@
+---
+- name: Installation Apache Spark
+  hosts: all
+  become: yes
+  vars:
+    spark_version: "3.5.0"
+    hadoop_version: "3"
+    spark_dir: "/opt/spark"
+  
+  tasks:
+    - name: Download Spark
+      get_url:
+        url: "https://archive.apache.org/dist/spark/spark-{{ spark_version }}/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}.tgz"
+        dest: "/tmp/spark.tgz"
+        timeout: 300
+
+    - name: Extract Spark
+      unarchive:
+        src: "/tmp/spark.tgz"
+        dest: "/opt/"
+        remote_src: yes
+        creates: "/opt/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}"
+
+    - name: Create symlink
+      file:
+        src: "/opt/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}"
+        dest: "{{ spark_dir }}"
+        state: link
+
+    - name: Set ownership
+      file:
+        path: "/opt/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}"
+        owner: spark
+        group: spark
+        recurse: yes
+        follow: no
+
+    - name: Add Spark to PATH
+      lineinfile:
+        path: /home/spark/.bashrc
+        line: "{{ item }}"
+        create: yes
+      loop:
+        - "export SPARK_HOME=/opt/spark"
+        - "export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin"

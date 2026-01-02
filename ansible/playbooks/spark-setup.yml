@@ -1,21 +1,6 @@
 ---
-- name: Configure Spark Master
-  hosts: spark_master
-  become: yes
-  tasks:
-    - name: Test connexion
-      ping:
-
-- name: Configure Spark Workers
-  hosts: spark_workers
-  become: yes
-  tasks:
-    - name: Test connexion
-      ping:
-
-- name: Configure Edge Node
-  hosts: spark_edge
-  become: yes
-  tasks:
-    - name: Test connexion
-      ping:
+- import_playbook: common.yml
+- import_playbook: spark-install.yml
+- import_playbook: spark-master.yml
+- import_playbook: spark-workers.yml
+- import_playbook: spark-edge.yml

@@ -110,9 +110,9 @@ resource "google_compute_instance" "spark_master" {
     }
   }
 
-  metadata = {
-    ssh-keys = "spark:${file("~/.ssh/id_rsa.pub")}"
-  }
+metadata = {
+  block-project-ssh-keys = false
+}
 
   metadata_startup_script = <<-EOF
     #!/bin/bash
@@ -145,9 +145,9 @@ resource "google_compute_instance" "spark_workers" {
     access_config {}
   }
 
-  metadata = {
-    ssh-keys = "spark:${file("~/.ssh/id_rsa.pub")}"
-  }
+metadata = {
+  block-project-ssh-keys = false
+}
 
   metadata_startup_script = <<-EOF
     #!/bin/bash
@@ -179,9 +179,9 @@ resource "google_compute_instance" "spark_edge" {
     access_config {}
   }
 
-  metadata = {
-    ssh-keys = "spark:${file("~/.ssh/id_rsa.pub")}"
-  }
+metadata = {
+  block-project-ssh-keys = false
+}
 
   metadata_startup_script = <<-EOF
     #!/bin/bash
