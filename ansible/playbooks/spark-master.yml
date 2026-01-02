@@ -1,0 +1,17 @@
+---
+- name: Configuration Spark Master
+  hosts: spark_master
+  become: yes
+  become_user: spark
+  
+  tasks:
+    - name: Create spark-env.sh
+      template:
+        src: templates/spark-env.sh.j2
+        dest: /opt/spark/conf/spark-env.sh
+        mode: '0755'
+
+    - name: Start Spark Master
+      shell: /opt/spark/sbin/start-master.sh
+      args:
+        creates: /opt/spark/logs/spark-spark-org.apache.spark.deploy.master.Master-1-spark-master.out

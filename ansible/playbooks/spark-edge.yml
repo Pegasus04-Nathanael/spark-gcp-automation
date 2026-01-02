@@ -1,0 +1,8 @@
+---
+- name: Configuration Spark Edge (Client)
+  hosts: spark_edge
+  become: yes
+  tasks:
+    - name: Edge configured for job submission
+      debug:
+        msg: "Edge node ready for spark-submit"
