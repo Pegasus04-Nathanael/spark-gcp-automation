@@ -104,15 +104,15 @@ resource "google_compute_instance" "spark_master" {
   network_interface {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.10"
-    
+
     access_config {
       # IP publique éphémère
     }
   }
 
-metadata = {
-  block-project-ssh-keys = false
-}
+  metadata = {
+    block-project-ssh-keys = false
+  }
 
   metadata_startup_script = <<-EOF
     #!/bin/bash
@@ -141,13 +141,13 @@ resource "google_compute_instance" "spark_workers" {
   network_interface {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.${11 + count.index}"
-    
+
     access_config {}
   }
 
-metadata = {
-  block-project-ssh-keys = false
-}
+  metadata = {
+    block-project-ssh-keys = false
+  }
 
   metadata_startup_script = <<-EOF
     #!/bin/bash
@@ -175,13 +175,13 @@ resource "google_compute_instance" "spark_edge" {
   network_interface {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.20"
-    
+
     access_config {}
   }
 
-metadata = {
-  block-project-ssh-keys = false
-}
+  metadata = {
+    block-project-ssh-keys = false
+  }
 
   metadata_startup_script = <<-EOF
     #!/bin/bash
@@ -189,4 +189,4 @@ metadata = {
     apt-get install -y openjdk-11-jdk wget python3
     echo "Edge initialized" > /tmp/init.log
   EOF
-}# GitHub Actions test - Fri Jan  2 22:24:01 UTC 2026
+} # GitHub Actions test - Fri Jan  2 22:24:01 UTC 2026
