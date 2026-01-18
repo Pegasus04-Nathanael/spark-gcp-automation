@@ -1,13 +1,14 @@
 ---
 - name: Configuration Spark Workers
   hosts: spark_workers
+  gather_facts: no
   become: yes
-  become_user: spark
+
   vars:
     master_ip: "10.0.1.10"
-  
+
   tasks:
     - name: Start Spark Workers
-      shell: /opt/spark/sbin/start-worker.sh spark://{{ master_ip }}:7077
+      shell: sudo -u spark /opt/spark/sbin/start-worker.sh spark://{{ master_ip }}:7077
       args:
         creates: /opt/spark/logs/spark-spark-org.apache.spark.deploy.worker.Worker-1*.out

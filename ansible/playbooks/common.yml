@@ -2,7 +2,20 @@
 - name: Configuration commune pour toutes les VMs
   hosts: all
   become: yes
+
   tasks:
+    - name: Create spark user
+      user:
+        name: spark
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Allow spark user to run sudo without password
+      copy:
+        dest: /etc/sudoers.d/spark
+        content: "spark ALL=(ALL) NOPASSWD:ALL\n"
+        mode: '0440'
+
     - name: Update apt cache
       apt:
         update_cache: yes
