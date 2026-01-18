@@ -19,3 +19,4 @@ __pycache__/
 auto_push.sh
 project_context.txt
 prompter.sh
+start-cluster.sh
