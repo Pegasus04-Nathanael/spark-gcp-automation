@@ -1,3 +1,4 @@
+cat > README.md << 'EOF'
 # Spark Cluster Automation on GCP
 
 [![Terraform CI](https://github.com/Pegasus04-Nathanael/spark-gcp-automation/actions/workflows/terraform-validate.yml/badge.svg)](https://github.com/Pegasus04-Nathanael/spark-gcp-automation/actions)
@@ -13,18 +14,7 @@ Automated deployment pipeline combining Terraform and Ansible to provision and c
 - Automated configuration management across all nodes
 - Performance benchmarking with real-world workloads
 - Cost-optimized infrastructure design
-- **CI/CD validation** with GitHub Actions
-
-## Technical Stack
-
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Infrastructure | Terraform 1.6+ | Cloud resource provisioning |
-| Configuration | Ansible 2.9+ | Service deployment and config |
-| Big Data | Apache Spark 3.5.0 | Distributed computing framework |
-| Cloud | Google Cloud Platform | Compute, networking, storage |
-| OS | Ubuntu 22.04 LTS | Base operating system |
-| CI/CD | GitHub Actions | Automated validation |
+- CI/CD validation with GitHub Actions
 
 ## Architecture
 ```
@@ -32,19 +22,20 @@ VPC: spark-vpc (10.0.0.0/16)
 │
 └── Subnet: spark-subnet (10.0.1.0/24)
     │
-    ├── spark-master (10.0.1.10)    # Cluster orchestration
-    ├── spark-worker-1 (10.0.1.11)  # Task execution
-    ├── spark-worker-2 (10.0.1.12)  # Task execution
+    ├── spark-master (10.0.1.10)    # Cluster orchestration, Web UI
+    ├── spark-worker-1 (10.0.1.11)  # Task execution (2 cores)
+    ├── spark-worker-2 (10.0.1.12)  # Task execution (2 cores)
     └── spark-edge (10.0.1.20)      # Job submission node
 ```
 
-**Security features:**
-- Isolated VPC with custom firewall rules
-- SSH key-based authentication only
-- Minimal port exposure (22, 7077, 8080, 4040)
-- Internal-only communication between cluster nodes
+**Communication flows:**
+- User → Edge via SSH (port 22) to submit jobs
+- User → Master Web UI via HTTP (port 8080) to monitor cluster
+- Edge → Master (port 7077) internal communication for job submission
+- Master → Workers internal communication for task distribution
+- Workers ↔ Workers internal data shuffle
 
-## Quick Start
+## Quick Start (First Time)
 
 ### Prerequisites
 ```bash
@@ -67,108 +58,105 @@ cd ../ansible
 ./update-inventory.sh
 ansible-playbook -i inventory/hosts.ini playbooks/spark-setup.yml
 
-# 3. Verify deployment
-ansible -i inventory/hosts.ini all -m ping
+# 3. Restart Workers manually (one-time fix)
+ssh codespace@<WORKER1_IP> "sudo -u spark /opt/spark/sbin/start-worker.sh spark://10.0.1.10:7077"
+ssh codespace@<WORKER2_IP> "sudo -u spark /opt/spark/sbin/start-worker.sh spark://10.0.1.10:7077"
+
+# 4. Copy test file to all nodes
+ssh codespace@<WORKER1_IP> "sudo cp /home/codespace/input.txt /opt/spark/"
+ssh codespace@<WORKER2_IP> "sudo cp /home/codespace/input.txt /opt/spark/"
+ssh codespace@<EDGE_IP> "sudo cp /home/codespace/input.txt /opt/spark/"
+
+# 5. Stop VMs to save costs
+gcloud compute instances stop spark-master spark-worker-1 spark-worker-2 spark-edge --zone=europe-west1-b
 ```
 
-**Total deployment time:** ~8 minutes
+**Total deployment time:** ~10 minutes
+
+## Next Time (Restart Cluster)
+```bash
+# 1. Authenticate with GCP
+gcloud auth login
+
+# 2. Run the start script
+./start-cluster.sh
+
+# 3. Connect to Edge and run tests
+ssh codespace@<EDGE_IP_displayed>
+
+# 4. Run WordCount
+time /opt/spark/bin/spark-submit \
+  --master spark://10.0.1.10:7077 \
+  --executor-cores 2 --num-executors 2 \
+  wordcount.py /opt/spark/input.txt results.txt
+```
+
+**Restart time:** 3-4 minutes
 
 ## Performance Results
 
-Tested with Shakespeare complete works (5.3 MB, 124K lines):
+Tested with Shakespeare complete works (5.2 MB, 196K lines):
 
-| Configuration | Cores | Execution Time | Speedup |
-|--------------|-------|----------------|---------|
-| 1 executor × 1 core | 1 | 19.56s | 1.00x (baseline) |
-| 2 executors × 1 core | 2 | 18.94s | 1.03x |
-| 2 executors × 2 cores | 4 | 11.91s | 1.64x |
+| Test | Executors | Cores/Exec | Total Cores | Spark Time | Total Time | Speedup |
+|------|-----------|------------|-------------|------------|------------|---------|
+| 1 | 1 | 1 | 1 | 24.56s | 33.06s | 1.00x |
+| 2 | 2 | 1 | 2 | 22.92s | 31.16s | 1.07x |
+| 3 | 2 | 2 | 4 | 15.73s | 23.90s | 1.56x |
 
 **Key findings:**
-- 59,508 unique words identified
-- Speedup limited by Amdahl's Law (~40% sequential code)
-- Overhead dominates on small files; production workloads scale better
+- 63,103 unique words identified
+- Speedup limited by Amdahl's Law (~35-40% sequential code)
+- Best performance with 2 executors × 2 cores (utilizing all 4 available cores)
+- Small file size (5.2 MB) limits scalability benefits
 
-See `RESULTS.md` for detailed performance analysis.
+## Technical Stack
 
-## CI/CD Pipeline
-
-Every push triggers automated validation:
-
-**Terraform Checks:**
-- ✅ Code formatting (`terraform fmt`)
-- ✅ Configuration validation (`terraform validate`)
-- ✅ Syntax verification
-
-**Ansible Checks:**
-- ✅ YAML linting
-- ✅ Playbook syntax validation
-- ✅ Best practices enforcement
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Infrastructure | Terraform 1.6+ | Cloud resource provisioning |
+| Configuration | Ansible 2.9+ | Service deployment and config |
+| Big Data | Apache Spark 3.5.0 | Distributed computing framework |
+| Cloud | Google Cloud Platform | Compute, networking, storage |
+| OS | Ubuntu 22.04 LTS | Base operating system |
+| CI/CD | GitHub Actions | Automated validation |
 
 ## Project Structure
 ```
 spark-gcp-automation/
-├── .github/
-│   └── workflows/
-│       └── terraform-validate.yml  # CI/CD pipeline
-├── terraform/                       # Infrastructure provisioning
-│   ├── main.tf                     # VPC, compute instances, firewall
-│   ├── variables.tf                # Configurable parameters
+├── start-cluster.sh                # Quick restart script
+├── terraform/                      # Infrastructure provisioning
+│   ├── main.tf                     # VPC, compute, firewall
+│   ├── variables.tf                # Configuration parameters
 │   └── outputs.tf                  # IP addresses, resource IDs
 ├── ansible/                        # Configuration management
-│   ├── inventory/                  # Dynamic inventory with IP updates
-│   ├── playbooks/                  # Spark installation and setup
-│   └── update-inventory.sh         # Auto-refresh public IPs
+│   ├── inventory/hosts.ini         # Dynamic inventory
+│   ├── playbooks/                  # Spark installation
+│   └── update-inventory.sh         # Auto-refresh IPs
 ├── wordcount/                      # Benchmark application
-│   └── wordcount.py                # PySpark word count with metrics
-├── RESULTS.md                      # Performance analysis
-└── README.md                       # This file
+│   └── wordcount.py                # PySpark word count
+└── RESULTS.md                      # Performance analysis
 ```
-
-## Key Features
-
-### Infrastructure as Code
-- **Reproducible:** Identical deployments every time
-- **Versionable:** Infrastructure changes tracked in Git
-- **Scalable:** Easily adjust cluster size via variables
-- **Cost-effective:** Automated teardown prevents waste
-
-### Automation
-- One-command deployment and destruction
-- Dynamic IP management for ephemeral infrastructure
-- Automated SSH key distribution
-- Service health checks and validation
-
-### Production-Ready
-- Proper network isolation (VPC)
-- Security best practices (firewall, SSH-only)
-- CI/CD validation before deployment
-- Documented troubleshooting procedures
 
 ## Common Operations
 
-### Update IPs after VM restart
+### Stop VMs (save costs)
 ```bash
-cd ansible
-./update-inventory.sh
+gcloud compute instances stop spark-master spark-worker-1 spark-worker-2 spark-edge \
+  --zone=europe-west1-b
 ```
 
-### Restart Spark services
+### Restart cluster
 ```bash
-# Master node
-ssh spark@<master-ip> "/opt/spark/sbin/start-master.sh"
-
-# Worker nodes (on each)
-ssh spark@<worker-ip> "/opt/spark/sbin/start-worker.sh spark://10.0.1.10:7077"
+./start-cluster.sh
 ```
 
 ### Run performance tests
 ```bash
-ssh spark@<edge-ip>
-cd wordcount
+ssh codespace@<edge-ip>
 time /opt/spark/bin/spark-submit \
   --master spark://10.0.1.10:7077 \
   --executor-cores 2 --num-executors 2 \
-  wordcount.py /home/spark/input.txt results.txt
+  wordcount.py /opt/spark/input.txt results.txt
 ```
 
 ### Destroy infrastructure
@@ -198,4 +186,4 @@ terraform destroy
 - [Terraform GCP Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
 - [Ansible Documentation](https://docs.ansible.com/)
 - [Apache Spark Documentation](https://spark.apache.org/docs/latest/)
-- [Performance Analysis Report](RESULTS.md)
+EOF
