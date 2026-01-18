@@ -1,166 +1,100 @@
-# 📋 TODO - Spark GCP Automation
+cat > TODO.md << 'EOF'
+# TODO - Spark GCP Automation
 
-**Étudiants :** Nathanael FETUE & Romero TCHIAZE  
-**Deadline :** Décembre 2025  
-**Dernière mise à jour :** 2 janvier 2026
+**Étudiants:** Nathanael FETUE & Romero TCHIAZE  
+**Dernière mise à jour:** 18 janvier 2026
 
 ---
 
-## 📊 PROGRESSION : 85%
+## PROGRESSION: 100%
 ```
-[████████████████████████████░░░░░] 85%
+[████████████████████████████████] 100%
 Infrastructure ████████████ 100%
 Ansible       ████████████ 100%
 Cluster Spark ████████████ 100%
-WordCount     ░░░░░░░░░░░░   0%
-Rapport       ░░░░░░░░░░░░   0%
+WordCount     ████████████ 100%
+Rapport       ████████████ 100%
 ```
 
 ---
 
-## ✅ SESSION 1 - Infrastructure (22 décembre 2025)
+## SESSION 1 - Infrastructure (22 décembre 2025)
 
-**Durée :** 3h | **Environnement :** Windows (GitBash)
+**Durée:** 3h | **Environnement:** Windows (GitBash)
+
+- Infrastructure Terraform déployée (4 VMs, VPC, Firewall)
+- GitHub repo créé et configuré
+- Documentation initiale
+
+---
+
+## SESSION 2 & 3 - Ansible + Cluster (2 janvier 2026)
+
+**Durée:** 2h30 | **Environnement:** GitHub Codespaces
+
+- Configuration Ansible complète
+- Spark 3.5.0 installé sur toutes les VMs
+- Cluster opérationnel avec 2 Workers
+- Test SparkPi réussi
+
+---
+
+## SESSION 4 - Tests WordCount (18 janvier 2026)
+
+**Durée:** 2h | **Environnement:** GitHub Codespaces
 
 ### Réalisations
-- ✅ Setup GCP project `spark-automation-tp-482009`
-- ✅ Configuration facturation (300€ crédits)
-- ✅ Installation Terraform 1.6.0 + gcloud CLI
-- ✅ Code Terraform complet :
-  - VPC custom + Subnet (10.0.1.0/24)
-  - 3 règles Firewall
-  - 4 VMs Ubuntu 22.04 (master, 2 workers, edge)
-- ✅ Déploiement réussi (9 ressources)
-- ✅ Test SSH : connexion OK
-- ✅ GitHub repo créé + Romero ajouté
-- ✅ README.md + documentation
+- Script wordcount.py créé et testé
+- Fichier Shakespeare (5.2 MB, 196K lignes) utilisé
+- 3 tests de performance effectués
+- Script start-cluster.sh créé pour redémarrage rapide
 
-**Résultat :** Infrastructure complète sur GCP ✅
+### Résultats
+| Test | Config | Temps | Speedup |
+|------|--------|-------|---------|
+| 1 | 1 exec × 1 core | 24.56s | 1.00x |
+| 2 | 2 exec × 1 core | 22.92s | 1.07x |
+| 3 | 2 exec × 2 cores | 15.73s | 1.56x |
 
----
-
-## ✅ SESSION 2 & 3 - Ansible + Cluster Spark (2 janvier 2026)
-
-**Durée :** 2h30 | **Environnement :** GitHub Codespaces
-
-### Setup
-- ✅ Codespaces configuré (gcloud, Terraform, Ansible)
-- ✅ Clé SSH générée et ajoutée aux VMs
-- ✅ Connexion SSH validée : 4/4 VMs OK
-- ✅ Ansible connectivity : 4/4 ping SUCCESS
-
-### Playbooks Ansible
-- ✅ `common.yml` : Java 11 + Python3 + wget installés
-- ✅ `spark-install.yml` : Spark 3.5.0 téléchargé et installé
-- ✅ `spark-master.yml` : Master configuré et démarré
-- ✅ `spark-workers.yml` : 2 Workers connectés
-- ✅ `spark-edge.yml` : Edge configuré
-- ✅ `spark-setup.yml` : Orchestration complète (playbook maître)
-
-### Cluster Opérationnel
-- ✅ Master Web UI : http://35.205.230.69:8080
-- ✅ 2 Workers actifs (10.0.1.11, 10.0.1.12)
-- ✅ Ressources : 4 cores, ~2GB RAM
-
-### Test SparkPi
-- ✅ Job exécuté depuis Edge
-- ✅ Résultat : **Pi ≈ 3.14244**
-- ✅ 100 tâches distribuées sur 2 workers
-- ✅ Temps : 8.8 secondes
-
-**Résultat :** CLUSTER SPARK COMPLET ET FONCTIONNEL ! 🎉
+### Corrections appliquées
+- Workers redémarrés manuellement après reboot VMs
+- Fichiers copiés dans /opt/spark/ pour accès distribué
+- Inventaire Ansible mis à jour avec user codespace
 
 ---
 
-## 🔄 SESSION 4 - WordCount (À VENIR)
+## PROJET TERMINÉ
 
-**Durée estimée :** 1h30
+**Livrables:**
+- Infrastructure Terraform fonctionnelle
+- Configuration Ansible automatisée
+- Cluster Spark 3.5.0 opérationnel
+- Tests de performance documentés
+- Script de redémarrage rapide
+- Documentation complète
 
-### Tâches
-- [ ] Créer script `wordcount.py`
-- [ ] Télécharger fichier texte test (~10MB)
-- [ ] Upload sur spark-edge
-
-### Tests Performance
-- [ ] **Test 1** : 1 executor
-  - Lancer WordCount
-  - Noter temps d'exécution
-  - Screenshot
-  
-- [ ] **Test 2** : 2 executors
-  - Relancer
-  - Comparer performances
-  
-- [ ] **Test 3** : 4 executors (max ressources)
-  - Analyser scalabilité
-
-### Métriques
-- [ ] Tableau comparatif (temps, speedup)
-- [ ] Screenshots Web UI
-- [ ] Logs et résultats
-
-### Git
-- [ ] Commit wordcount.py
-- [ ] Commit résultats tests
-- [ ] Push sur GitHub
+**Repository:** https://github.com/Pegasus04-Nathanael/spark-gcp-automation  
+**GCP Project:** spark-automation-tp-482009
 
 ---
 
-## 📝 SESSION 5 - Rapport Final (À VENIR)
+## Utilisation Future
+```bash
+# Redémarrer le cluster
+./start-cluster.sh
 
-**Durée estimée :** 1h30  
-**Format :** PDF, 3 pages
+# Lancer tests
+ssh codespace@<EDGE_IP>
+time /opt/spark/bin/spark-submit \
+  --master spark://10.0.1.10:7077 \
+  --executor-cores 2 --num-executors 2 \
+  wordcount.py /opt/spark/input.txt results.txt
 
-### Contenu
-- [ ] **Page 1** : Introduction + Architecture (schéma réseau)
-- [ ] **Page 2** : Méthodologie (Terraform + Ansible)
-- [ ] **Page 3** : Tests WordCount + Résultats + Conclusions
+# Arrêter VMs (économiser)
+gcloud compute instances stop spark-master spark-worker-1 \
+  spark-worker-2 spark-edge --zone=europe-west1-b
 
-### Livrables
-- [ ] Rapport PDF exporté
-- [ ] Script démo (15 min)
-- [ ] Screenshots finaux dans /docs
-
----
-
-## 🚨 AVANT RENDU FINAL
-
-- [ ] `terraform destroy` pour nettoyer GCP
-- [ ] Vérifier .gitignore (pas de secrets)
-- [ ] README.md à jour
-- [ ] Rapport PDF dans le repo
-- [ ] Partager lien GitHub avec prof
-
----
-
-## 📞 CONTACTS
-
-**Nathanael FETUE**  
-Email : nathanaelfetue1237@gmail.com  
-GitHub : Pegasus04-Nathanael
-
-**Romero TCHIAZE**  
-Email : [à compléter]  
-GitHub : [à compléter]
-
-**Repository :** https://github.com/Pegasus04-Nathanael/spark-gcp-automation  
-**GCP Project :** spark-automation-tp-482009
+# Détruire infrastructure
+cd terraform && terraform destroy
 ```
-
----
-
-## 🎯 **DIFFÉRENCE CLEF**
-
-**AVANT (mauvais) :**
-- ✅ Fait
-- [ ] À faire
-
-→ On perd l'historique session par session
-
-**MAINTENANT (bon) :**
-```
-✅ SESSION 1 - ce qu'on a fait
-✅ SESSION 2 - ce qu'on a fait
-✅ SESSION 3 - ce qu'on a fait
-🔄 SESSION 4 - ce qu'on va faire
-📝 SESSION 5 - ce qu'on va faire
+EOF
