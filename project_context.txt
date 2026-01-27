@@ -1,0 +1,1355 @@
+Project Context From: /workspaces/spark-gcp-automation
+Generated On: Sun Jan 18 16:06:02 UTC 2026
+===============================================
+Ignored Directory Patterns: .* node_modules vendor build dist target __pycache__ .next cache target venv storage
+Ignored File Patterns: *.log *.jar *.pdf *.png *.jpg *.class *.sqlite *.csv project_context.txt package-lock.json yarn.lock composer.lock *.ico pnpm-lock.yaml
+===============================================
+
+//---> PATH: /workspaces/spark-gcp-automation/.gitignore
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+
+# Credentials
+*.pem
+*.key
+credentials.json
+
+# Python
+__pycache__/
+*.pyc
+
+auto_push.sh// END OF FILE: .gitignore
+
+//---> PATH: /workspaces/spark-gcp-automation/README.md
+
+# Spark Cluster Automation on GCP
+
+[![Terraform CI](https://github.com/Pegasus04-Nathanael/spark-gcp-automation/actions/workflows/terraform-validate.yml/badge.svg)](https://github.com/Pegasus04-Nathanael/spark-gcp-automation/actions)
+
+Production-ready Infrastructure as Code for deploying distributed Apache Spark clusters on Google Cloud Platform.
+
+## Project Overview
+
+Automated deployment pipeline combining Terraform and Ansible to provision and configure multi-node Spark clusters. Built with modern DevOps practices, this solution enables reproducible deployments in under 10 minutes.
+
+**Key achievements:**
+- Zero-touch deployment of 4-node cluster (1 master, 2 workers, 1 edge)
+- Automated configuration management across all nodes
+- Performance benchmarking with real-world workloads
+- Cost-optimized infrastructure design
+- **CI/CD validation** with GitHub Actions
+
+## Technical Stack
+
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| Infrastructure | Terraform 1.6+ | Cloud resource provisioning |
+| Configuration | Ansible 2.9+ | Service deployment and config |
+| Big Data | Apache Spark 3.5.0 | Distributed computing framework |
+| Cloud | Google Cloud Platform | Compute, networking, storage |
+| OS | Ubuntu 22.04 LTS | Base operating system |
+| CI/CD | GitHub Actions | Automated validation |
+
+## Architecture
+```
+VPC: spark-vpc (10.0.0.0/16)
+│
+└── Subnet: spark-subnet (10.0.1.0/24)
+    │
+    ├── spark-master (10.0.1.10)    # Cluster orchestration
+    ├── spark-worker-1 (10.0.1.11)  # Task execution
+    ├── spark-worker-2 (10.0.1.12)  # Task execution
+    └── spark-edge (10.0.1.20)      # Job submission node
+```
+
+**Security features:**
+- Isolated VPC with custom firewall rules
+- SSH key-based authentication only
+- Minimal port exposure (22, 7077, 8080, 4040)
+- Internal-only communication between cluster nodes
+
+## Quick Start
+
+### Prerequisites
+```bash
+# Required tools
+- Terraform >= 1.6.0
+- Ansible >= 2.9
+- gcloud CLI (authenticated)
+- SSH key pair
+```
+
+### Deploy Infrastructure
+```bash
+# 1. Provision cloud resources
+cd terraform
+terraform init
+terraform apply
+
+# 2. Configure Spark cluster
+cd ../ansible
+./update-inventory.sh
+ansible-playbook -i inventory/hosts.ini playbooks/spark-setup.yml
+
+# 3. Verify deployment
+ansible -i inventory/hosts.ini all -m ping
+```
+
+**Total deployment time:** ~8 minutes
+
+## Performance Results
+
+Tested with Shakespeare complete works (5.3 MB, 124K lines):
+
+| Configuration | Cores | Execution Time | Speedup |
+|--------------|-------|----------------|---------|
+| 1 executor × 1 core | 1 | 19.56s | 1.00x (baseline) |
+| 2 executors × 1 core | 2 | 18.94s | 1.03x |
+| 2 executors × 2 cores | 4 | 11.91s | 1.64x |
+
+**Key findings:**
+- 59,508 unique words identified
+- Speedup limited by Amdahl's Law (~40% sequential code)
+- Overhead dominates on small files; production workloads scale better
+
+See `RESULTS.md` for detailed performance analysis.
+
+## CI/CD Pipeline
+
+Every push triggers automated validation:
+
+**Terraform Checks:**
+- ✅ Code formatting (`terraform fmt`)
+- ✅ Configuration validation (`terraform validate`)
+- ✅ Syntax verification
+
+**Ansible Checks:**
+- ✅ YAML linting
+- ✅ Playbook syntax validation
+- ✅ Best practices enforcement
+
+## Project Structure
+```
+spark-gcp-automation/
+├── .github/
+│   └── workflows/
+│       └── terraform-validate.yml  # CI/CD pipeline
+├── terraform/                       # Infrastructure provisioning
+│   ├── main.tf                     # VPC, compute instances, firewall
+│   ├── variables.tf                # Configurable parameters
+│   └── outputs.tf                  # IP addresses, resource IDs
+├── ansible/                        # Configuration management
+│   ├── inventory/                  # Dynamic inventory with IP updates
+│   ├── playbooks/                  # Spark installation and setup
+│   └── update-inventory.sh         # Auto-refresh public IPs
+├── wordcount/                      # Benchmark application
+│   └── wordcount.py                # PySpark word count with metrics
+├── RESULTS.md                      # Performance analysis
+└── README.md                       # This file
+```
+
+## Key Features
+
+### Infrastructure as Code
+- **Reproducible:** Identical deployments every time
+- **Versionable:** Infrastructure changes tracked in Git
+- **Scalable:** Easily adjust cluster size via variables
+- **Cost-effective:** Automated teardown prevents waste
+
+### Automation
+- One-command deployment and destruction
+- Dynamic IP management for ephemeral infrastructure
+- Automated SSH key distribution
+- Service health checks and validation
+
+### Production-Ready
+- Proper network isolation (VPC)
+- Security best practices (firewall, SSH-only)
+- CI/CD validation before deployment
+- Documented troubleshooting procedures
+
+## Common Operations
+
+### Update IPs after VM restart
+```bash
+cd ansible
+./update-inventory.sh
+```
+
+### Restart Spark services
+```bash
+# Master node
+ssh spark@<master-ip> "/opt/spark/sbin/start-master.sh"
+
+# Worker nodes (on each)
+ssh spark@<worker-ip> "/opt/spark/sbin/start-worker.sh spark://10.0.1.10:7077"
+```
+
+### Run performance tests
+```bash
+ssh spark@<edge-ip>
+cd wordcount
+time /opt/spark/bin/spark-submit \
+  --master spark://10.0.1.10:7077 \
+  --executor-cores 2 --num-executors 2 \
+  wordcount.py /home/spark/input.txt results.txt
+```
+
+### Destroy infrastructure
+```bash
+cd terraform
+terraform destroy
+```
+
+## Skills Demonstrated
+
+- Infrastructure as Code (Terraform)
+- Configuration Management (Ansible)
+- Cloud Architecture (GCP)
+- Distributed Systems (Apache Spark)
+- CI/CD (GitHub Actions)
+- Shell Scripting (Bash)
+- Performance Analysis
+- Git workflow
+
+## Authors
+
+- Nathanael FETUE
+- Romero TCHIAZE
+
+## Resources
+
+- [Terraform GCP Provider](https://registry.terraform.io/providers/hashicorp/google/latest/docs)
+- [Ansible Documentation](https://docs.ansible.com/)
+- [Apache Spark Documentation](https://spark.apache.org/docs/latest/)
+- [Performance Analysis Report](RESULTS.md)
+// END OF FILE: README.md
+
+//---> PATH: /workspaces/spark-gcp-automation/RESULTS.md
+
+# Résultats Tests Performance WordCount
+
+## Configuration Tests
+- **Fichier** : Shakespeare complet (5.3 MB, 124,456 lignes)
+- **Cluster** : 1 Master + 2 Workers (2 cores chacun)
+- **Mémoire** : 512 MB par executor
+
+## Résultats
+
+| Test | Executors | Cores/Exec | Total Cores | Temps Spark | Temps Total | Speedup |
+|------|-----------|------------|-------------|-------------|-------------|---------|
+| 1    | 1         | 1          | 1           | 19.56s      | 28.17s      | 1.00x   |
+| 2    | 2         | 1          | 2           | 18.94s      | 27.26s      | 1.03x   |
+| 3    | 2         | 2          | 4           | 11.91s      | 20.21s      | 1.64x   |
+
+## Analyse Performance
+
+### Observations
+1. **Test 1 vs Test 2** : Gain minimal (3%) avec 2 cores
+   - Overhead coordination entre workers > gain parallélisme
+   - Fichier trop petit (5.3MB) pour amortir coûts réseau
+
+2. **Test 3** : Meilleur speedup (1.64x avec 4 cores)
+   - Utilisation optimale des 2 cores par worker
+   - Réduction communication inter-workers
+
+### Limitations Speedup
+Le speedup n'atteint pas 4x (théorique) pour plusieurs raisons :
+
+**Loi d'Amdahl** : ~40% du code séquentiel
+- Lecture fichier (driver)
+- `.collect()` ramène données sur driver
+- Écriture finale (Python)
+
+**Overhead distribution** :
+- Communication réseau inter-workers
+- Sérialisation/désérialisation
+- Coordination Master/Workers
+
+**Taille fichier** : 5.3MB trop petit
+- Overhead > gain parallélisme
+- Avec 1GB+, speedup serait ~3x
+
+## Top 10 Mots
+
+1. **the** : 27,549
+2. **and** : 26,037
+3. **i** : 19,540
+4. **to** : 18,700
+5. **of** : 18,010
+6. **a** : 14,383
+7. **my** : 12,455
+8. **in** : 10,671
+9. **you** : 10,630
+10. **that** : 10,487
+
+**Total** : 59,508 mots uniques
+// END OF FILE: RESULTS.md
+
+//---> PATH: /workspaces/spark-gcp-automation/TODO.md
+
+# 📋 TODO - Spark GCP Automation
+
+**Étudiants :** Nathanael FETUE & Romero TCHIAZE  
+**Deadline :** Décembre 2025  
+**Dernière mise à jour :** 2 janvier 2026
+
+---
+
+## 📊 PROGRESSION : 85%
+```
+[████████████████████████████░░░░░] 85%
+Infrastructure ████████████ 100%
+Ansible       ████████████ 100%
+Cluster Spark ████████████ 100%
+WordCount     ░░░░░░░░░░░░   0%
+Rapport       ░░░░░░░░░░░░   0%
+```
+
+---
+
+## ✅ SESSION 1 - Infrastructure (22 décembre 2025)
+
+**Durée :** 3h | **Environnement :** Windows (GitBash)
+
+### Réalisations
+- ✅ Setup GCP project `spark-automation-tp-482009`
+- ✅ Configuration facturation (300€ crédits)
+- ✅ Installation Terraform 1.6.0 + gcloud CLI
+- ✅ Code Terraform complet :
+  - VPC custom + Subnet (10.0.1.0/24)
+  - 3 règles Firewall
+  - 4 VMs Ubuntu 22.04 (master, 2 workers, edge)
+- ✅ Déploiement réussi (9 ressources)
+- ✅ Test SSH : connexion OK
+- ✅ GitHub repo créé + Romero ajouté
+- ✅ README.md + documentation
+
+**Résultat :** Infrastructure complète sur GCP ✅
+
+---
+
+## ✅ SESSION 2 & 3 - Ansible + Cluster Spark (2 janvier 2026)
+
+**Durée :** 2h30 | **Environnement :** GitHub Codespaces
+
+### Setup
+- ✅ Codespaces configuré (gcloud, Terraform, Ansible)
+- ✅ Clé SSH générée et ajoutée aux VMs
+- ✅ Connexion SSH validée : 4/4 VMs OK
+- ✅ Ansible connectivity : 4/4 ping SUCCESS
+
+### Playbooks Ansible
+- ✅ `common.yml` : Java 11 + Python3 + wget installés
+- ✅ `spark-install.yml` : Spark 3.5.0 téléchargé et installé
+- ✅ `spark-master.yml` : Master configuré et démarré
+- ✅ `spark-workers.yml` : 2 Workers connectés
+- ✅ `spark-edge.yml` : Edge configuré
+- ✅ `spark-setup.yml` : Orchestration complète (playbook maître)
+
+### Cluster Opérationnel
+- ✅ Master Web UI : http://35.205.230.69:8080
+- ✅ 2 Workers actifs (10.0.1.11, 10.0.1.12)
+- ✅ Ressources : 4 cores, ~2GB RAM
+
+### Test SparkPi
+- ✅ Job exécuté depuis Edge
+- ✅ Résultat : **Pi ≈ 3.14244**
+- ✅ 100 tâches distribuées sur 2 workers
+- ✅ Temps : 8.8 secondes
+
+**Résultat :** CLUSTER SPARK COMPLET ET FONCTIONNEL ! 🎉
+
+---
+
+## 🔄 SESSION 4 - WordCount (À VENIR)
+
+**Durée estimée :** 1h30
+
+### Tâches
+- [ ] Créer script `wordcount.py`
+- [ ] Télécharger fichier texte test (~10MB)
+- [ ] Upload sur spark-edge
+
+### Tests Performance
+- [ ] **Test 1** : 1 executor
+  - Lancer WordCount
+  - Noter temps d'exécution
+  - Screenshot
+  
+- [ ] **Test 2** : 2 executors
+  - Relancer
+  - Comparer performances
+  
+- [ ] **Test 3** : 4 executors (max ressources)
+  - Analyser scalabilité
+
+### Métriques
+- [ ] Tableau comparatif (temps, speedup)
+- [ ] Screenshots Web UI
+- [ ] Logs et résultats
+
+### Git
+- [ ] Commit wordcount.py
+- [ ] Commit résultats tests
+- [ ] Push sur GitHub
+
+---
+
+## 📝 SESSION 5 - Rapport Final (À VENIR)
+
+**Durée estimée :** 1h30  
+**Format :** PDF, 3 pages
+
+### Contenu
+- [ ] **Page 1** : Introduction + Architecture (schéma réseau)
+- [ ] **Page 2** : Méthodologie (Terraform + Ansible)
+- [ ] **Page 3** : Tests WordCount + Résultats + Conclusions
+
+### Livrables
+- [ ] Rapport PDF exporté
+- [ ] Script démo (15 min)
+- [ ] Screenshots finaux dans /docs
+
+---
+
+## 🚨 AVANT RENDU FINAL
+
+- [ ] `terraform destroy` pour nettoyer GCP
+- [ ] Vérifier .gitignore (pas de secrets)
+- [ ] README.md à jour
+- [ ] Rapport PDF dans le repo
+- [ ] Partager lien GitHub avec prof
+
+---
+
+## 📞 CONTACTS
+
+**Nathanael FETUE**  
+Email : nathanaelfetue1237@gmail.com  
+GitHub : Pegasus04-Nathanael
+
+**Romero TCHIAZE**  
+Email : [à compléter]  
+GitHub : [à compléter]
+
+**Repository :** https://github.com/Pegasus04-Nathanael/spark-gcp-automation  
+**GCP Project :** spark-automation-tp-482009
+```
+
+---
+
+## 🎯 **DIFFÉRENCE CLEF**
+
+**AVANT (mauvais) :**
+- ✅ Fait
+- [ ] À faire
+
+→ On perd l'historique session par session
+
+**MAINTENANT (bon) :**
+```
+✅ SESSION 1 - ce qu'on a fait
+✅ SESSION 2 - ce qu'on a fait
+✅ SESSION 3 - ce qu'on a fait
+🔄 SESSION 4 - ce qu'on va faire
+📝 SESSION 5 - ce qu'on va faire// END OF FILE: TODO.md
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/ansible.cfg
+
+[defaults]
+host_key_checking = False
+// END OF FILE: ansible/ansible.cfg
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/inventory/hosts.ini
+
+[spark_master]
+spark-master ansible_host=34.79.22.99 ansible_user=codespace ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[spark_workers]
+spark-worker-1 ansible_host=34.140.108.37 ansible_user=codespace ansible_ssh_private_key_file=~/.ssh/id_rsa
+spark-worker-2 ansible_host=35.233.47.114 ansible_user=codespace ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[spark_edge]
+spark-edge ansible_host=104.155.46.237 ansible_user=codespace ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[all:children]
+spark_master
+spark_workers
+spark_edge// END OF FILE: ansible/inventory/hosts.ini
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/common.yml
+
+---
+- name: Configuration commune pour toutes les VMs
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Create spark user
+      user:
+        name: spark
+        shell: /bin/bash
+        create_home: yes
+
+    - name: Allow spark user to run sudo without password
+      copy:
+        dest: /etc/sudoers.d/spark
+        content: "spark ALL=(ALL) NOPASSWD:ALL\n"
+        mode: '0440'
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Java 11
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Install Python3
+      apt:
+        name: python3
+        state: present
+
+    - name: Install wget
+      apt:
+        name: wget
+        state: present
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_version
+      changed_when: false
+
+    - name: Display Java version
+      debug:
+        msg: "{{ java_version.stderr }}"// END OF FILE: ansible/playbooks/common.yml
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/spark-edge.yml
+
+---
+- name: Configuration Spark Edge (Client)
+  hosts: spark_edge
+  become: yes
+  tasks:
+    - name: Edge configured for job submission
+      debug:
+        msg: "Edge node ready for spark-submit"// END OF FILE: ansible/playbooks/spark-edge.yml
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/spark-install.yml
+
+---
+- name: Installation Apache Spark
+  hosts: all
+  become: yes
+  vars:
+    spark_version: "3.5.0"
+    hadoop_version: "3"
+    spark_dir: "/opt/spark"
+  
+  tasks:
+    - name: Download Spark
+      get_url:
+        url: "https://archive.apache.org/dist/spark/spark-{{ spark_version }}/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}.tgz"
+        dest: "/tmp/spark.tgz"
+        timeout: 300
+
+    - name: Extract Spark
+      unarchive:
+        src: "/tmp/spark.tgz"
+        dest: "/opt/"
+        remote_src: yes
+        creates: "/opt/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}"
+
+    - name: Create symlink
+      file:
+        src: "/opt/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}"
+        dest: "{{ spark_dir }}"
+        state: link
+
+    - name: Set ownership
+      file:
+        path: "/opt/spark-{{ spark_version }}-bin-hadoop{{ hadoop_version }}"
+        owner: spark
+        group: spark
+        recurse: yes
+        follow: no
+
+    - name: Add Spark to PATH
+      lineinfile:
+        path: /home/spark/.bashrc
+        line: "{{ item }}"
+        create: yes
+      loop:
+        - "export SPARK_HOME=/opt/spark"
+        - "export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin"// END OF FILE: ansible/playbooks/spark-install.yml
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/spark-master.yml
+
+---
+- name: Configuration Spark Master
+  hosts: spark_master
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Create spark-env.sh
+      template:
+        src: templates/spark-env.sh.j2
+        dest: /opt/spark/conf/spark-env.sh
+        mode: '0755'
+        owner: spark
+        group: spark
+
+    - name: Start Spark Master
+      shell: sudo -u spark /opt/spark/sbin/start-master.sh
+      args:
+        creates: /opt/spark/logs/spark-spark-org.apache.spark.deploy.master.Master-1-spark-master.out// END OF FILE: ansible/playbooks/spark-master.yml
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/spark-setup.yml
+
+---
+- import_playbook: common.yml
+- import_playbook: spark-install.yml
+- import_playbook: spark-master.yml
+- import_playbook: spark-workers.yml
+- import_playbook: spark-edge.yml// END OF FILE: ansible/playbooks/spark-setup.yml
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/spark-workers.yml
+
+---
+- name: Configuration Spark Workers
+  hosts: spark_workers
+  gather_facts: no
+  become: yes
+
+  vars:
+    master_ip: "10.0.1.10"
+
+  tasks:
+    - name: Start Spark Workers
+      shell: sudo -u spark /opt/spark/sbin/start-worker.sh spark://{{ master_ip }}:7077
+      args:
+        creates: /opt/spark/logs/spark-spark-org.apache.spark.deploy.worker.Worker-1*.out// END OF FILE: ansible/playbooks/spark-workers.yml
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/playbooks/templates/spark-env.sh.j2
+
+#!/usr/bin/env bash
+
+export SPARK_MASTER_HOST={{ hostvars['spark-master']['ansible_default_ipv4']['address'] }}
+export SPARK_MASTER_PORT=7077
+export SPARK_MASTER_WEBUI_PORT=8080
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+// END OF FILE: ansible/playbooks/templates/spark-env.sh.j2
+
+//---> PATH: /workspaces/spark-gcp-automation/ansible/update-inventory.sh
+
+#!/bin/bash
+# Script pour mettre à jour automatiquement hosts.ini
+
+echo "🔄 Récupération des nouvelles IPs..."
+
+MASTER_IP=$(gcloud compute instances describe spark-master --zone=europe-west1-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+WORKER1_IP=$(gcloud compute instances describe spark-worker-1 --zone=europe-west1-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+WORKER2_IP=$(gcloud compute instances describe spark-worker-2 --zone=europe-west1-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+EDGE_IP=$(gcloud compute instances describe spark-edge --zone=europe-west1-b --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+
+echo "✅ IPs récupérées :"
+echo "  Master: $MASTER_IP"
+echo "  Worker-1: $WORKER1_IP"
+echo "  Worker-2: $WORKER2_IP"
+echo "  Edge: $EDGE_IP"
+
+# Nettoie les anciennes entrées SSH
+echo "🧹 Nettoyage des anciennes clés SSH..."
+rm -f ~/.ssh/known_hosts
+touch ~/.ssh/known_hosts
+
+cat > inventory/hosts.ini << EOI
+[spark_master]
+spark-master ansible_host=$MASTER_IP ansible_user=spark ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[spark_workers]
+spark-worker-1 ansible_host=$WORKER1_IP ansible_user=spark ansible_ssh_private_key_file=~/.ssh/id_rsa
+spark-worker-2 ansible_host=$WORKER2_IP ansible_user=spark ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[spark_edge]
+spark-edge ansible_host=$EDGE_IP ansible_user=spark ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[all:children]
+spark_master
+spark_workers
+spark_edge
+EOI
+
+echo "✅ hosts.ini mis à jour !"
+echo "✅ known_hosts nettoyé !"
+echo ""
+echo "👉 Lance maintenant : ansible -i inventory/hosts.ini all -m ping"
+// END OF FILE: ansible/update-inventory.sh
+
+//---> PATH: /workspaces/spark-gcp-automation/docs/architecture.md
+
+Architecture Spark sur GCP
+==========================
+
+VPC: spark-vpc (10.0.0.0/16)
+│
+└── Subnet: spark-subnet (10.0.1.0/24)
+    │
+    ├── spark-master (10.0.1.10)
+    │   └── Services: Spark Master, Web UI (8080)
+    │
+    ├── spark-worker-1 (10.0.1.11)
+    │   └── Services: Spark Worker
+    │
+    ├── spark-worker-2 (10.0.1.12)
+    │   └── Services: Spark Worker
+    │
+    └── spark-edge (10.0.1.20)
+        └── Services: Client, job submission
+
+Firewall Rules:
+- SSH (22) : depuis Internet
+- Spark UI (8080, 7077, 4040) : depuis Internet
+- Interne (all) : au sein du subnet// END OF FILE: docs/architecture.md
+
+//---> PATH: /workspaces/spark-gcp-automation/prompter.sh
+
+#!/bin/bash
+
+# --- Configuration ---
+
+# Default project path if none provided
+DEFAULT_PROJECT_PATH="."
+PROJECT_PATH=${1:-"$DEFAULT_PROJECT_PATH"}
+
+# Output file name (relative to PROJECT_PATH)
+OUTPUT_FILENAME="project_context.txt"
+
+# Directories to completely ignore (won't be traversed)
+EXCLUDE_DIRS_PATTERN=( \
+    ".*"            # All hidden folders (.git, .vscode, .idea, .svn, etc.)
+    "node_modules"
+    "vendor"        # PHP Composer
+    "build"
+    "dist"
+    "target"        # Java/Rust build outputs
+    "__pycache__"   # Python cache
+    ".next"         # Next.js build output
+    "cache"         # General cache folders
+    "target"
+    "venv"
+    "storage"       # Laravel storage (often contains logs, cache, etc.)
+    # Add more directory names here if needed
+)
+
+# Specific file patterns to ignore within traversed directories
+EXCLUDE_FILES_PATTERN=( \
+    "*.log"
+    "*.jar"
+    "*.pdf"
+    "*.png"
+    "*.jpg"
+    "*.class"
+    "*.sqlite"
+    "*.csv"
+    "project_context.txt"
+    # ".env*"       # Consider if you NEED .env files; uncomment if NOT needed.
+    "package-lock.json"
+    "yarn.lock"
+    "composer.lock"
+    "*.ico"
+    "pnpm-lock.yaml"
+    # Add more file patterns here (e.g., "*.swp", "*.bak", "*.tmp")
+)
+
+# --- Script Logic ---
+
+# Attempt to get absolute path; exit if PROJECT_PATH is invalid early
+PROJECT_PATH=$(realpath "$PROJECT_PATH" 2>/dev/null)
+if [ $? -ne 0 ] || [ ! -d "$PROJECT_PATH" ]; then
+    echo "Error: Invalid or non-existent project directory specified." >&2 # Error to stderr
+    exit 1
+fi
+
+OUTPUT_FILE="$PROJECT_PATH/$OUTPUT_FILENAME"
+
+# --- Safety Check: Prevent overwriting the project directory itself ---
+# This is unlikely but guards against strange configurations
+if [ "$PROJECT_PATH" == "$OUTPUT_FILE" ]; then
+    echo "Error: Project directory path conflicts with output file name '$OUTPUT_FILENAME'." >&2
+    exit 1
+fi
+
+# Delete output file silently if it exists
+rm -f "$OUTPUT_FILE"
+
+# --- Build the find command ---
+# Uses arrays to construct the find command safely and avoid complex escaping issues with eval
+find_args=("$PROJECT_PATH")
+
+# Add directory prune conditions
+if [ ${#EXCLUDE_DIRS_PATTERN[@]} -gt 0 ]; then
+    find_args+=(\()
+    first_prune=true
+    for dir_pattern in "${EXCLUDE_DIRS_PATTERN[@]}"; do
+        if ! $first_prune; then
+            find_args+=(-o)
+        fi
+        find_args+=(-name "$dir_pattern" -type d)
+        first_prune=false
+    done
+    find_args+=(\) -prune -o) # Add the prune action and the OR for the next part
+fi
+
+# Add primary find conditions (type file, exclude output file, exclude patterns)
+find_args+=(\( -type f -not -path "$OUTPUT_FILE")
+if [ ${#EXCLUDE_FILES_PATTERN[@]} -gt 0 ]; then
+    for file_pattern in "${EXCLUDE_FILES_PATTERN[@]}"; do
+        find_args+=(-not -name "$file_pattern")
+    done
+fi
+find_args+=(-print \)) # Add the print action and close the group
+
+# --- Execute the find command and process results ---
+
+# Create the header in the output file
+{
+    echo "Project Context From: $PROJECT_PATH"
+    echo "Generated On: $(date)"
+    echo "==============================================="
+    echo "Ignored Directory Patterns: ${EXCLUDE_DIRS_PATTERN[*]}"
+    echo "Ignored File Patterns: ${EXCLUDE_FILES_PATTERN[*]}"
+    echo "==============================================="
+    echo ""
+} > "$OUTPUT_FILE"
+
+error_count=0
+# Use find with process substitution and sorting. Avoids eval.
+while IFS= read -r FILE_PATH; do
+    # Calculate relative path for cleaner output
+    RELATIVE_PATH="${FILE_PATH#"$PROJECT_PATH"/}"
+
+    # Append file info and content to the output file
+    {
+        # echo ""
+        # echo "// ==============================================="
+        # echo "---> FILE: $RELATIVE_PATH"
+        echo "//---> PATH: $FILE_PATH"
+        # echo "// ==============================================="
+        echo ""
+    } >> "$OUTPUT_FILE"
+
+    # Check if file is likely binary/non-text using 'file' command
+    # -b: omit filename; check for common non-text types
+    if file -b "$FILE_PATH" | grep -q -E 'binary|archive|compressed|image|font'; then
+        echo "[Non-text file (e.g., binary, data, compressed) - Contents omitted]" >> "$OUTPUT_FILE"
+    else
+        # Append text file content, redirect cat errors to stderr
+        if ! cat "$FILE_PATH" >> "$OUTPUT_FILE" 2> /dev/null; then # Hide cat errors from stdout
+             # Optionally log error to the output file itself, or just count it
+             echo "[Error reading file content for $RELATIVE_PATH]" >> "$OUTPUT_FILE"
+             ((error_count++))
+        fi
+    fi
+
+    {
+        # echo ""
+        echo "// END OF FILE: $RELATIVE_PATH"
+        echo ""
+    } >> "$OUTPUT_FILE"
+
+done < <(find "${find_args[@]}" | sort) # Execute find command using safe array expansion
+
+# Optionally report errors to stderr if any occurred
+if [ $error_count -gt 0 ]; then
+    echo "Warning: Encountered $error_count errors reading file contents during context generation." >&2
+    # Exit with a non-zero status to indicate partial success/warning
+    exit 1
+fi
+
+# Exit silently on success
+exit 0
+// END OF FILE: prompter.sh
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/.terraform.lock.hcl
+
+# This file is maintained automatically by "terraform init".
+# Manual edits may be lost in future updates.
+
+provider "registry.terraform.io/hashicorp/google" {
+  version = "7.14.1"
+  hashes = [
+    "h1:PWld5LsERFpdHnINaCgXebs2oQtm2T09Ls/0OUASk0A=",
+    "zh:0006182db112098af8514fc38d9cd4e816da4145a2a0b9fb62cc9e281eb2b2a1",
+    "zh:60311d9770ca26c549af9a964ee6cb60ce7541b52fedfaf5f112b0931e6bcce1",
+    "zh:65b400c0718f6b7c5cd0fba1b2e3696d5f4f69868229627b11b0b2b94b613ade",
+    "zh:9ec00812dc750687610140f9a97c374492ef320eddcb669b154e1d2e8714f7f3",
+    "zh:adaf0486d68da121886992a3762cedffa86b611fa43294359b2a569044c462a7",
+    "zh:ba95c0d8279dd8e7b9294e521e461d4adaa7c171b00502be197b6c7ff4f07d65",
+    "zh:c216ca4b350a90c4e74e3f502ef3f35617cdd5c278e2b04ecba2bca980fb5e96",
+    "zh:dd7991a71477dee46c7c57f60775341524271c425ab04e66d8f2762f9b4763eb",
+    "zh:dd7b63b40e67b073d2acb32ee60099d884ce75bf1152a307422c47358054d170",
+    "zh:e5d601ca4ab813c51d897e4c2e80bf3e3565c0dd4f37f85bb91964e90ca92dfe",
+    "zh:f12d8f91ed783ffac9ed8d6c331e0cbe5189455fe352ba633b171b366f52e2cd",
+    "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
+  ]
+}
+// END OF FILE: terraform/.terraform.lock.hcl
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/backend.tf
+
+terraform {
+  backend "gcs" {
+    bucket = "spark-terraform-state-spark-automation-tp-482009"
+    prefix = "terraform/state"
+  }
+}
+// END OF FILE: terraform/backend.tf
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/create-state-bucket.sh
+
+#!/bin/bash
+# Création du bucket pour Terraform state
+
+PROJECT_ID="spark-automation-tp-482009"
+BUCKET_NAME="spark-terraform-state-${PROJECT_ID}"
+
+# Crée le bucket
+gcloud storage buckets create gs://${BUCKET_NAME} \
+  --project=${PROJECT_ID} \
+  --location=europe-west1 \
+  --uniform-bucket-level-access
+
+# Active le versioning (historique)
+gcloud storage buckets update gs://${BUCKET_NAME} --versioning
+
+echo "✅ Bucket créé : gs://${BUCKET_NAME}"
+// END OF FILE: terraform/create-state-bucket.sh
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/main.tf
+
+# ============================================
+# PROVIDER
+# ============================================
+provider "google" {
+  project = var.project_id
+  region  = var.region
+  zone    = var.zone
+}
+
+# ============================================
+# NETWORK
+# ============================================
+
+# VPC Custom
+resource "google_compute_network" "spark_vpc" {
+  name                    = "spark-vpc"
+  auto_create_subnetworks = false
+  description             = "VPC custom pour cluster Spark"
+}
+
+# Subnet
+resource "google_compute_subnetwork" "spark_subnet" {
+  name          = "spark-subnet"
+  ip_cidr_range = var.subnet_cidr
+  region        = var.region
+  network       = google_compute_network.spark_vpc.id
+  description   = "Subnet pour les noeuds Spark"
+}
+
+# ============================================
+# FIREWALL RULES
+# ============================================
+
+# Règle Firewall - SSH
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "spark-allow-ssh"
+  network = google_compute_network.spark_vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["spark-cluster"]
+}
+
+# Règle Firewall - Spark Master UI
+resource "google_compute_firewall" "allow_spark_ui" {
+  name    = "spark-allow-ui"
+  network = google_compute_network.spark_vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["8080", "7077", "4040"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["spark-master"]
+}
+
+# Règle Firewall - Communication interne
+resource "google_compute_firewall" "allow_internal" {
+  name    = "spark-allow-internal"
+  network = google_compute_network.spark_vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = [var.subnet_cidr]
+  target_tags   = ["spark-cluster"]
+}
+
+# ============================================
+# COMPUTE INSTANCES
+# ============================================
+
+# Spark Master
+resource "google_compute_instance" "spark_master" {
+  name         = "spark-master"
+  machine_type = var.machine_type_master
+  zone         = var.zone
+
+  tags = ["spark-cluster", "spark-master"]
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      size  = 50
+    }
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.spark_subnet.id
+    network_ip = "10.0.1.10"
+
+    access_config {
+      # IP publique éphémère
+    }
+  }
+
+  metadata = {
+    block-project-ssh-keys = false
+  }
+
+  metadata_startup_script = <<-EOF
+    #!/bin/bash
+    apt-get update
+    apt-get install -y openjdk-11-jdk wget python3
+    echo "Master initialized" > /tmp/init.log
+  EOF
+}
+
+# Spark Workers
+resource "google_compute_instance" "spark_workers" {
+  count        = var.worker_count
+  name         = "spark-worker-${count.index + 1}"
+  machine_type = var.machine_type_worker
+  zone         = var.zone
+
+  tags = ["spark-cluster", "spark-worker"]
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      size  = 50
+    }
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.spark_subnet.id
+    network_ip = "10.0.1.${11 + count.index}"
+
+    access_config {}
+  }
+
+  metadata = {
+    block-project-ssh-keys = false
+  }
+
+  metadata_startup_script = <<-EOF
+    #!/bin/bash
+    apt-get update
+    apt-get install -y openjdk-11-jdk wget python3
+    echo "Worker ${count.index + 1} initialized" > /tmp/init.log
+  EOF
+}
+
+# Spark Edge
+resource "google_compute_instance" "spark_edge" {
+  name         = "spark-edge"
+  machine_type = var.machine_type_worker
+  zone         = var.zone
+
+  tags = ["spark-cluster", "spark-edge"]
+
+  boot_disk {
+    initialize_params {
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+      size  = 30
+    }
+  }
+
+  network_interface {
+    subnetwork = google_compute_subnetwork.spark_subnet.id
+    network_ip = "10.0.1.20"
+
+    access_config {}
+  }
+
+  metadata = {
+    block-project-ssh-keys = false
+  }
+
+  metadata_startup_script = <<-EOF
+    #!/bin/bash
+    apt-get update
+    apt-get install -y openjdk-11-jdk wget python3
+    echo "Edge initialized" > /tmp/init.log
+  EOF
+} # GitHub Actions test - Fri Jan  2 22:24:01 UTC 2026
+// END OF FILE: terraform/main.tf
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/monitoring.tf
+
+resource "google_monitoring_alert_policy" "high_cpu" {
+  display_name = "High CPU Usage"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "CPU > 80%"
+
+    condition_threshold {
+      filter = <<-EOT
+        resource.type="gce_instance"
+        AND metric.type="compute.googleapis.com/instance/cpu/utilization"
+      EOT
+
+      duration        = "60s"
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.8
+
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+    }
+  }
+
+  notification_channels = [
+    google_monitoring_notification_channel.email.name
+  ]
+}
+
+resource "google_monitoring_notification_channel" "email" {
+  display_name = "Email Alerts"
+  type         = "email"
+
+  labels = {
+    email_address = "emmanuelyoumto1@gmail.com"
+  }
+}
+// END OF FILE: terraform/monitoring.tf
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/outputs.tf
+
+output "master_public_ip" {
+  description = "IP publique du master Spark"
+  value       = google_compute_instance.spark_master.network_interface[0].access_config[0].nat_ip
+}
+
+output "master_private_ip" {
+  description = "IP privée du master"
+  value       = google_compute_instance.spark_master.network_interface[0].network_ip
+}
+
+output "workers_public_ips" {
+  description = "IPs publiques des workers"
+  value       = google_compute_instance.spark_workers[*].network_interface[0].access_config[0].nat_ip
+}
+
+output "workers_private_ips" {
+  description = "IPs privées des workers"
+  value       = google_compute_instance.spark_workers[*].network_interface[0].network_ip
+}
+
+output "edge_public_ip" {
+  description = "IP publique du edge node"
+  value       = google_compute_instance.spark_edge.network_interface[0].access_config[0].nat_ip
+}
+
+output "edge_private_ip" {
+  description = "IP privée du edge"
+  value       = google_compute_instance.spark_edge.network_interface[0].network_ip
+}
+
+output "ssh_command_master" {
+  description = "Commande SSH pour le master"
+  value       = "ssh -i ~/.ssh/id_rsa spark@${google_compute_instance.spark_master.network_interface[0].access_config[0].nat_ip}"
+}// END OF FILE: terraform/outputs.tf
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/terraform.tfstate
+
+// END OF FILE: terraform/terraform.tfstate
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/terraform.tfstate.backup
+
+{
+  "version": 4,
+  "terraform_version": "1.6.0",
+  "serial": 1,
+  "lineage": "f3d779de-85c6-aa8f-6a58-ba0403d21394",
+  "outputs": {
+    "edge_private_ip": {
+      "value": "10.0.1.20",
+      "type": "string"
+    },
+    "master_private_ip": {
+      "value": "10.0.1.10",
+      "type": "string"
+    },
+    "workers_private_ips": {
+      "value": [
+        "10.0.1.11",
+        "10.0.1.12"
+      ],
+      "type": [
+        "tuple",
+        [
+          "string",
+          "string"
+        ]
+      ]
+    }
+  },
+  "resources": [],
+  "check_results": null
+}
+// END OF FILE: terraform/terraform.tfstate.backup
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/terraform.tfvars
+
+project_id = "spark-automation-tp-482009"
+region     = "europe-west1"
+zone       = "europe-west1-b"// END OF FILE: terraform/terraform.tfvars
+
+//---> PATH: /workspaces/spark-gcp-automation/terraform/variables.tf
+
+variable "project_id" {
+  description = "GCP Project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "GCP Region"
+  type        = string
+  default     = "europe-west1"
+}
+
+variable "zone" {
+  description = "GCP Zone"
+  type        = string
+  default     = "europe-west1-b"
+}
+
+variable "machine_type_master" {
+  description = "Type de machine pour le master"
+  type        = string
+  default     = "e2-medium"
+}
+
+variable "machine_type_worker" {
+  description = "Type de machine pour les workers"
+  type        = string
+  default     = "e2-medium"
+}
+
+variable "worker_count" {
+  description = "Nombre de workers Spark"
+  type        = number
+  default     = 2
+}
+
+variable "network_cidr" {
+  description = "CIDR du réseau VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "subnet_cidr" {
+  description = "CIDR du subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}// END OF FILE: terraform/variables.tf
+
+//---> PATH: /workspaces/spark-gcp-automation/wordcount/wordcount.py
+
+from pyspark import SparkContext, SparkConf
+import sys
+import time
+
+if len(sys.argv) != 3:
+    print("Usage: wordcount.py <input_file> <output_dir>")
+    sys.exit(1)
+
+input_file = sys.argv[1]
+output_dir = sys.argv[2]
+
+conf = SparkConf().setAppName("WordCount")
+sc = SparkContext(conf=conf)
+sc.setLogLevel("ERROR")
+
+start_time = time.time()
+
+text = sc.textFile(input_file)
+counts = text.flatMap(lambda line: line.split()) \
+             .map(lambda word: (word.lower(), 1)) \
+             .reduceByKey(lambda a, b: a + b)
+
+num_words = counts.count()
+
+# COLLECTE TOUT sur le Driver (Edge)
+sorted_counts = counts.sortBy(lambda x: x[1], ascending=False).collect()
+
+# Écris en Python normal (pas Spark)
+with open(output_dir, 'w') as f:
+    for word, count in sorted_counts:
+        f.write(f"{word}\t{count}\n")
+
+elapsed_time = time.time() - start_time
+
+print(f"\n{'='*50}")
+print(f"WordCount termine !")
+print(f"Temps execution : {elapsed_time:.2f} secondes")
+print(f"Nombre de mots uniques : {num_words}")
+print(f"\nTop 10 mots :")
+for word, count in sorted_counts[:10]:
+    print(f"  {word}: {count}")
+print(f"{'='*50}\n")
+
+sc.stop()
+// END OF FILE: wordcount/wordcount.py
+

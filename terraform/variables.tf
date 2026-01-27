@@ -30,7 +30,7 @@ variable "machine_type_worker" {
 variable "worker_count" {
   description = "Nombre de workers Spark"
   type        = number
-  default     = 2
+  default     = 4
 }
 
 variable "network_cidr" {

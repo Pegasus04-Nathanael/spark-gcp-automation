@@ -104,15 +104,14 @@ resource "google_compute_instance" "spark_master" {
   network_interface {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.10"
-    
-    access_config {}
+
+    access_config {
+      # IP publique éphémère
+    }
   }
 
   metadata = {
-    ssh-keys = join("\n", [
-      "spark:${file("~/.ssh/id_rsa.pub")}", 
-      "spark:${file("${path.module}/spark-gcp-automation/my_key.pub")}"
-    ])
+    block-project-ssh-keys = false
   }
 
   metadata_startup_script = <<-EOF
@@ -135,22 +134,19 @@ resource "google_compute_instance" "spark_workers" {
   boot_disk {
     initialize_params {
       image = "ubuntu-os-cloud/ubuntu-2204-lts"
-      size  = 50
+      size  =45 
     }
   }
 
   network_interface {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.${11 + count.index}"
-    
+
     access_config {}
   }
 
   metadata = {
-    ssh-keys = join("\n", [
-      "spark:${file("~/.ssh/id_rsa.pub")}", 
-      "spark:${file("${path.module}/spark-gcp-automation/my_key.pub")}"
-    ])
+    block-project-ssh-keys = false
   }
 
   metadata_startup_script = <<-EOF
@@ -179,15 +175,12 @@ resource "google_compute_instance" "spark_edge" {
   network_interface {
     subnetwork = google_compute_subnetwork.spark_subnet.id
     network_ip = "10.0.1.20"
-    
+
     access_config {}
   }
 
   metadata = {
-    ssh-keys = join("\n", [
-      "spark:${file("~/.ssh/id_rsa.pub")}", 
-      "spark:${file("${path.module}/spark-gcp-automation/my_key.pub")}"
-    ])
+    block-project-ssh-keys = false
   }
 
   metadata_startup_script = <<-EOF
@@ -196,4 +189,4 @@ resource "google_compute_instance" "spark_edge" {
     apt-get install -y openjdk-11-jdk wget python3
     echo "Edge initialized" > /tmp/init.log
   EOF
-}
+} # GitHub Actions test - Fri Jan  2 22:24:01 UTC 2026

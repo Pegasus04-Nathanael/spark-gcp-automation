@@ -1,155 +1,100 @@
-# 📋 TODO - Ordre des Sessions
+cat > TODO.md << 'EOF'
+# TODO - Spark GCP Automation
 
-## ✅ Session 1 - Infrastructure (COMPLÉTÉ)
-- [x] Setup GCP project avec facturation
-- [x] Installation Terraform + gcloud CLI
-- [x] Installation Ansible (structure prête)
-- [x] Création clés SSH
-- [x] Code Terraform complet (VPC, VMs, Firewall)
-- [x] Déploiement infrastructure sur GCP
-- [x] Test connexion SSH
-- [x] Documentation README
-- [x] Push sur GitHub
-- [x] Ajout collaborateur
+**Étudiants:** Nathanael FETUE & Romero TCHIAZE  
+**Dernière mise à jour:** 18 janvier 2026
 
 ---
 
-## 🔄 Session 2 - Configuration Ansible (PRIORITAIRE)
-
-### Prérequis
-- [ ] Fixer Ansible sur Windows (installer via WSL2)
-- [ ] Tester `ansible -m ping` sur toutes les VMs
-
-### Développement Playbooks
-- [ ] **Playbook common** (toutes les VMs)
-  - [ ] Update système (apt update/upgrade)
-  - [ ] Installation Java 11
-  - [ ] Installation Python 3
-  - [ ] Configuration timezone/locale
-  
-- [ ] **Playbook spark-master**
-  - [ ] Télécharger Spark 3.5.0
-  - [ ] Extraire dans /opt/spark
-  - [ ] Configurer spark-env.sh (SPARK_MASTER_HOST)
-  - [ ] Configurer spark-defaults.conf
-  - [ ] Démarrer service Master : `start-master.sh`
-  - [ ] Vérifier Web UI : http://MASTER_IP:8080
-
-- [ ] **Playbook spark-workers**
-  - [ ] Télécharger et installer Spark
-  - [ ] Configurer connexion au Master
-  - [ ] Démarrer workers : `start-worker.sh spark://MASTER_IP:7077`
-  - [ ] Vérifier dans Master UI que workers sont connectés
-
-- [ ] **Playbook spark-edge**
-  - [ ] Installer Spark en mode client
-  - [ ] Configurer spark-submit
-  - [ ] Créer utilisateur pour jobs
-
-### Tests
-- [ ] Lancer tous les playbooks
-- [ ] Vérifier logs des services
-- [ ] Accéder Web UI Master (port 8080)
-- [ ] Confirmer 2 workers actifs
+## PROGRESSION: 100%
+```
+[████████████████████████████████] 100%
+Infrastructure ████████████ 100%
+Ansible       ████████████ 100%
+Cluster Spark ████████████ 100%
+WordCount     ████████████ 100%
+Rapport       ████████████ 100%
+```
 
 ---
 
-## 📊 Session 3 - Application WordCount
+## SESSION 1 - Infrastructure (22 décembre 2025)
 
-### Développement
-- [ ] Créer l'application WordCount en Scala ou Python
-- [ ] Préparer un fichier texte de test (quelques MB)
-- [ ] Upload fichier sur le cluster (HDFS ou local)
+**Durée:** 3h | **Environnement:** Windows (GitBash)
 
-### Tests de Performance
-- [ ] **Test 1** : 1 executor
-  - [ ] Lancer WordCount
-  - [ ] Noter le temps d'exécution
-  - [ ] Screenshot des logs
-  
-- [ ] **Test 2** : 2 executors
-  - [ ] Relancer avec 2 executors
-  - [ ] Comparer les performances
-  
-- [ ] **Test 3** : 4 executors (si possible)
-  - [ ] Test avec ressources max
-  - [ ] Analyser scalabilité
-
-### Métriques à Collecter
-- [ ] Temps d'exécution total
-- [ ] Nombre de tâches
-- [ ] Utilisation CPU/Mémoire
-- [ ] Screenshots Spark UI
+- Infrastructure Terraform déployée (4 VMs, VPC, Firewall)
+- GitHub repo créé et configuré
+- Documentation initiale
 
 ---
 
-## 📝 Session 4 - Documentation Finale
+## SESSION 2 & 3 - Ansible + Cluster (2 janvier 2026)
 
-### Rapport (3 pages)
-- [ ] **Introduction** (0.5 page)
-  - [ ] Contexte du projet
-  - [ ] Objectifs
-  - [ ] Technologies choisies
+**Durée:** 2h30 | **Environnement:** GitHub Codespaces
 
-- [ ] **Architecture** (1 page)
-  - [ ] Schéma de l'infrastructure
-  - [ ] Description des composants
-  - [ ] Configuration réseau
-  - [ ] Sécurité
-
-- [ ] **Méthodologie** (0.5 page)
-  - [ ] Terraform : IaC approach
-  - [ ] Ansible : Configuration management
-  - [ ] Process de déploiement
-
-- [ ] **Résultats Tests** (0.75 page)
-  - [ ] Résultats WordCount
-  - [ ] Tableaux comparatifs
-  - [ ] Graphiques de performance
-
-- [ ] **Conclusions** (0.25 page)
-  - [ ] Bilan technique
-  - [ ] Difficultés rencontrées
-  - [ ] Améliorations possibles
-
-### Démo Live
-- [ ] Préparer script de démo (10-15 min)
-- [ ] Tester le flow complet
-- [ ] Préparer slides si besoin
-
-### Finitions
-- [ ] Vérifier que tout est sur GitHub
-- [ ] Screenshots dans /docs
-- [ ] README à jour
-- [ ] Code commenté
+- Configuration Ansible complète
+- Spark 3.5.0 installé sur toutes les VMs
+- Cluster opérationnel avec 2 Workers
+- Test SparkPi réussi
 
 ---
 
-## 🚨 Avant Rendu Final
+## SESSION 4 - Tests WordCount (18 janvier 2026)
 
-- [ ] `terraform destroy` pour nettoyer GCP
-- [ ] Vérifier que le repo est bien privé
-- [ ] Tous les fichiers sensibles dans .gitignore
-- [ ] Aucune clé SSH ou credential committé
-- [ ] README propre et complet
-- [ ] Rapport PDF généré
+**Durée:** 2h | **Environnement:** GitHub Codespaces
+
+### Réalisations
+- Script wordcount.py créé et testé
+- Fichier Shakespeare (5.2 MB, 196K lignes) utilisé
+- 3 tests de performance effectués
+- Script start-cluster.sh créé pour redémarrage rapide
+
+### Résultats
+| Test | Config | Temps | Speedup |
+|------|--------|-------|---------|
+| 1 | 1 exec × 1 core | 24.56s | 1.00x |
+| 2 | 2 exec × 1 core | 22.92s | 1.07x |
+| 3 | 2 exec × 2 cores | 15.73s | 1.56x |
+
+### Corrections appliquées
+- Workers redémarrés manuellement après reboot VMs
+- Fichiers copiés dans /opt/spark/ pour accès distribué
+- Inventaire Ansible mis à jour avec user codespace
 
 ---
 
-## 💡 Idées d'Améliorations (Bonus)
+## PROJET TERMINÉ
 
-- [ ] Monitoring avec Prometheus/Grafana
-- [ ] Automatisation CI/CD avec GitHub Actions
-- [ ] Support multi-région
-- [ ] Auto-scaling des workers
-- [ ] Utilisation de GCS (Google Cloud Storage) au lieu de local
-- [ ] Terraform modules réutilisables
-- [ ] Tests automatisés avec Terratest
-- [ ] Documentation avec MkDocs
+**Livrables:**
+- Infrastructure Terraform fonctionnelle
+- Configuration Ansible automatisée
+- Cluster Spark 3.5.0 opérationnel
+- Tests de performance documentés
+- Script de redémarrage rapide
+- Documentation complète
+
+**Repository:** https://github.com/Pegasus04-Nathanael/spark-gcp-automation  
+**GCP Project:** spark-automation-tp-482009
 
 ---
 
-## 📞 Contacts
+## Utilisation Future
+```bash
+# Redémarrer le cluster
+./start-cluster.sh
 
-**Nathanael FETUE** - [nathanaelfetue1237@gmail.com/Pegasus04-Nathanael]  
-**Romero TCHIAZE** - [email/GitHub]
+# Lancer tests
+ssh codespace@<EDGE_IP>
+time /opt/spark/bin/spark-submit \
+  --master spark://10.0.1.10:7077 \
+  --executor-cores 2 --num-executors 2 \
+  wordcount.py /opt/spark/input.txt results.txt
+
+# Arrêter VMs (économiser)
+gcloud compute instances stop spark-master spark-worker-1 \
+  spark-worker-2 spark-edge --zone=europe-west1-b
+
+# Détruire infrastructure
+cd terraform && terraform destroy
+```
+EOF

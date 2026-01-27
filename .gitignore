@@ -17,3 +17,6 @@ __pycache__/
 *.pyc
 
 auto_push.sh
+project_context.txt
+prompter.sh
+start-cluster.sh
